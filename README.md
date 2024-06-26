@@ -10,7 +10,7 @@ The overall **TPS (transactions per second)** is calculated by dividing the tota
 - `logs_parser.py`: Analyzes the logs by organizing swap transactions based on the time they were sent, identifying the corresponding block for each transaction, organizing these blocks, and finally calculating the TPS to provide insights into the dynamics of transaction inclusion and blockchain performance.
 
 **Suggested TPS-test setup:**
-1) Fund 100 accounts with 0.001 ETH  (`prepare.py`)
+1) Fund 100 accounts with 0.002 ETH  (`prepare.py`)
 2) Wrap 0.00000005 WETH for each account (`prepare.py`)
 3) Approve spending 1 WETH for SmartRouter for each account (`prepare.py`)
 4) Run 10 instances of `tps_test.py` from different IPs. This can be achieved by operating the script on 10 distinct servers or by setting up iptables rules to alternate source IPs based on the user.<br>
