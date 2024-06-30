@@ -1,9 +1,22 @@
-# TPS tests for Polygon zkEVM and zkSync Era
+# AMM TPS test for ZKsync Era, Polygon zkEVM, and OP Mainnet
+
+Our goal was to benchmark maximal transaction throughput (TPS) for ZKsync Era, Polygon zkEVM and OP Mainnet.
+We settled on the [time-tested AMM test](https://medium.com/dragonfly-research/the-amm-test-a-no-bs-look-at-l1-performance-4c8c2129d581), i.e. measuring the TPS via the number of token swaps through a Uniswap V2 AMM style pool.
+Using the AMM test as a reasonable apples-to-apples comparison was popularized by Dragonfly Research; see also [discussion](https://twitter.com/gakonst/status/1784332678931894598) by Georgios (Paradigm) against non-specific TPS, plus [here](https://twitter.com/0xsudogm/status/1805613746876039556).
+
+
 This repository includes scripts designed for executing predefined WETH -> CAKE V2 swaps simultaneously from multiple accounts. Additionally, it contains helper scripts to analyze blockchain performance metrics post-execution.
 
 The overall **TPS (transactions per second)** is calculated by dividing the total number of transactions sent by the total time in seconds between the moments the first and last transactions were included (last_block_timestamp - first_block_timestamp).
 
 ## Results
+
+### ZKsync Era Results
+- From 100 different accounts, 20 V2-swaps were sent by each in parallel
+- 2000 transactions total, split across 10 IP addresses to avoid RPC limits
+- It took 11s for all transactions to be included with overall throughput of **181.8 tx/s**
+- On-chain data: 11 blocks from [36612894](https://explorer.zksync.io/block/36612894) to [36612904](https://explorer.zksync.io/block/36612904) are almost exclusively our swaps
+<img src="results/zksync_era_2024-06-14/plot.png" alt="ZKSync Era results" width="600" height="360">
 
 ### Polygon zkEVM Results
 - From 100 different accounts, 20 V2-swaps were sent by each in parallel
@@ -11,13 +24,6 @@ The overall **TPS (transactions per second)** is calculated by dividing the tota
 - It took 372s for all transactions to be included with relatively steady TPS of **5.4 tx/s**
 - On-chain data: 131 blocks from [13686722](https://zkevm.polygonscan.com/block/13686722) to [13686852](https://zkevm.polygonscan.com/block/13686852) are almost exclusively our swaps
 <img src="results/polygon_zkevm_2024-06-25/plot.png" alt="Polygon zkEVM results" width="600" height="360">
-
-### ZKSync Era Results
-- From 100 different accounts, 20 V2-swaps were sent by each in parallel
-- 2000 transactions total, split across 10 IP addresses to avoid RPC limits
-- It took 11s for all transactions to be included with overall throughput of **181.8 tx/s**
-- On-chain data: 11 blocks from [36612894](https://explorer.zksync.io/block/36612894) to [36612904](https://explorer.zksync.io/block/36612904) are almost exclusively our swaps
-<img src="results/zksync_era_2024-06-14/plot.png" alt="ZKSync Era results" width="600" height="360">
 
 ### Optimism OP Stack Results
 We offer a rough estimate of Optimism's TPS for completeness.<br/>
