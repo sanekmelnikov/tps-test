@@ -9,19 +9,19 @@ The overall **TPS (transactions per second)** is calculated by dividing the tota
 - From 100 different accounts, 20 V2-swaps were sent by each in parallel
 - 2000 transactions total, split across 10 IP addresses to avoid RPC limits
 - It took 372s for all transactions to be included with relatively steady TPS of **5.4 tx/s**
-- On-chain data: 131 blocks from (13686722)[https://zkevm.polygonscan.com/block/13686722] to (13686852)[https://zkevm.polygonscan.com/block/13686852] are almost exclusively our swaps
+- On-chain data: 131 blocks from [13686722](https://zkevm.polygonscan.com/block/13686722) to [13686852](https://zkevm.polygonscan.com/block/13686852) are almost exclusively our swaps
 
 ### ZKSync Era Results
 - From 100 different accounts, 20 V2-swaps were sent by each in parallel
 - 2000 transactions total, split across 10 IP addresses to avoid RPC limits
 - It took 11s for all transactions to be included with overall throughput of **181.8 tx/s**
-- On-chain data: 11 blocks from (36612894)[https://explorer.zksync.io/block/36612894] to (36612904)[https://explorer.zksync.io/block/36612904] are almost exclusively our swaps
+- On-chain data: 11 blocks from [36612894](https://explorer.zksync.io/block/36612894) to [36612904](https://explorer.zksync.io/block/36612904) are almost exclusively our swaps
 
 ### Optimism OP Stack Results
 We offer a rough estimate of Optimism's TPS for completeness.<br/>
 For Optimism Mainnet, the block size is 30M gas, block time is 2 seconds, and an average AMM trade requires roughly 105k gas<br/>
 Thus the maximum possible TPS on Optimism Mainnet is roughly 30M / 2sec / 105k ~= **142.8 tx/s**<br/>
-We obtained this TPS in practice (blocks between (121963262)[https://optimistic.etherscan.io/block/121963262] and (121963269)[https://optimistic.etherscan.io/block/121963269]), meaning there are no limits on the sequencer side other than the chosen block size limit.<br/>
+We obtained this TPS in practice (blocks between [121963262](https://optimistic.etherscan.io/block/121963262) and [121963269](https://optimistic.etherscan.io/block/121963269)), meaning there are no limits on the sequencer side other than the chosen block size limit.<br/>
 For Base, the upper limit is roughly 97M / 2sec / 105k ~= 462 tx/s
 
 ## Technical Details
