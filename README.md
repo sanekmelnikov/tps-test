@@ -3,6 +3,29 @@ This repository includes scripts designed for executing predefined WETH -> CAKE 
 
 The overall **TPS (transactions per second)** is calculated by dividing the total number of transactions sent by the total time in seconds between the moments the first and last transactions were included (last_block_timestamp - first_block_timestamp).
 
+## Results
+
+### Polygon zkEVM Results
+- From 100 different accounts, 20 V2-swaps were sent by each in parallel
+- 2000 transactions total, split across 10 IP addresses to avoid RPC limits
+- It took 372s for all transactions to be included with relatively steady TPS of **5.4 tx/s**
+- On-chain data: 131 blocks from (13686722)[https://zkevm.polygonscan.com/block/13686722] to (13686852)[https://zkevm.polygonscan.com/block/13686852] are almost exclusively our swaps
+
+### ZKSync Era Results
+- From 100 different accounts, 20 V2-swaps were sent by each in parallel
+- 2000 transactions total, split across 10 IP addresses to avoid RPC limits
+- It took 11s for all transactions to be included with overall throughput of **181.8 tx/s**
+- On-chain data: 11 blocks from (36612894)[https://explorer.zksync.io/block/36612894] to (36612904)[https://explorer.zksync.io/block/36612904] are almost exclusively our swaps
+
+### Optimism OP Stack Results
+We offer a rough estimate of Optimism's TPS for completeness.<br/>
+For Optimism Mainnet, the block size is 30M gas, block time is 2 seconds, and an average AMM trade requires roughly 105k gas<br/>
+Thus the maximum possible TPS on Optimism Mainnet is roughly 30M / 2sec / 105k ~= **142.8 tx/s**<br/>
+We obtained this TPS in practice (blocks between (121963262)[https://optimistic.etherscan.io/block/121963262] and (121963269)[https://optimistic.etherscan.io/block/121963269]), meaning there are no limits on the sequencer side other than the chosen block size limit.<br/>
+For Base, the upper limit is roughly 97M / 2sec / 105k ~= 462 tx/s
+
+## Technical Details
+
 **High-Level Overview:**
 - `blockchain.py`: Manages addresses and endpoints for specified chain IDs. This class is extendable for tps-tests on other chains, though it is crucial to ensure that any newly added tokens possess sufficient V2 liquidity for trading.
 - `prepare.py`: Implements the logic to fund accounts (derived from a mnemonic) with ETH. It also handles wrapping and approving ETH for the SmartRouter to spend.
@@ -25,5 +48,6 @@ To synchronize start times, the script include logic to delay execution until th
 7) Create `tps-results.log` using `logs_parser.py` - the list of blocks and final TPS result [(example)](https://gist.github.com/sanekmelnikov/c6d79a30708ded1828ac5e7a371a7eac)
 
 **Recent TPS Results:**
-- zkSync Era Mainnet: **181.8 txs/s** (Date: 14 June 2024, spent in swap tx fees: ~0.007 ETH) [[tps-results.log]](https://gist.github.com/sanekmelnikov/c6d79a30708ded1828ac5e7a371a7eac)
-- Polygon zkEVM Mainnet: **5.4 txs/s** (Date: 25 June 2024, spent in swap tx fees: ~0.042 ETH) [[tps-results.log]](https://gist.github.com/sanekmelnikov/075978aa29896f259baa0517a12b66a2)
+- zkSync Era Mainnet: **181.8 txs/s** (Date: 14 June 2024, spent in swap tx fees: ~0.007 ETH) [[tps-results]](https://gist.github.com/sanekmelnikov/c6d79a30708ded1828ac5e7a371a7eac)
+- Optimism Mainnet: **142.8 tx/s** (Date: 27 June 2024, spent in swap tx fees: ~0.0007 ETH) [[tps-results]](https://gist.github.com/sanekmelnikov/4738d8bbf8db6b48cd1c527854cf6a32)
+- Polygon zkEVM Mainnet: **5.4 txs/s** (Date: 25 June 2024, spent in swap tx fees: ~0.042 ETH) [[tps-results]](https://gist.github.com/sanekmelnikov/075978aa29896f259baa0517a12b66a2)
