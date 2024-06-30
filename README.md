@@ -10,12 +10,14 @@ The overall **TPS (transactions per second)** is calculated by dividing the tota
 - 2000 transactions total, split across 10 IP addresses to avoid RPC limits
 - It took 372s for all transactions to be included with relatively steady TPS of **5.4 tx/s**
 - On-chain data: 131 blocks from [13686722](https://zkevm.polygonscan.com/block/13686722) to [13686852](https://zkevm.polygonscan.com/block/13686852) are almost exclusively our swaps
+<img src="results/polygon_zkevm_2024-06-25/plot.png" alt="Polygon zkEVM results" width="600" height="360">
 
 ### ZKSync Era Results
 - From 100 different accounts, 20 V2-swaps were sent by each in parallel
 - 2000 transactions total, split across 10 IP addresses to avoid RPC limits
 - It took 11s for all transactions to be included with overall throughput of **181.8 tx/s**
 - On-chain data: 11 blocks from [36612894](https://explorer.zksync.io/block/36612894) to [36612904](https://explorer.zksync.io/block/36612904) are almost exclusively our swaps
+<img src="results/zksync_era_2024-06-14/plot.png" alt="ZKSync Era results" width="600" height="360">
 
 ### Optimism OP Stack Results
 We offer a rough estimate of Optimism's TPS for completeness.<br/>
