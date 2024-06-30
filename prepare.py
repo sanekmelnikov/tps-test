@@ -64,6 +64,7 @@ class Preparer:
         self.account = account
         # Initialize web3:
         self.blockchain = BlockchainData(chain_id)
+        self.chain_id = chain_id.value
         self.w3 = Web3(Web3.HTTPProvider(self.blockchain.http_rpc_url()))
         self.nonce = self.w3.eth.get_transaction_count(account.address)
         weth_address = self.blockchain.get_address(Token.WETH)
@@ -78,6 +79,7 @@ class Preparer:
     @retriable
     def transfer_eth(self, to_address, amount_in_eth):
         tx = {
+            'chainId': self.chain_id,
             'from': self.account.address,
             'to': to_address,
             'value': Web3.to_wei(amount_in_eth, 'ether'),
@@ -95,6 +97,7 @@ class Preparer:
     @retriable
     def wrap_eth(self, amount_in_eth):
         tx = self.weth.functions.deposit().build_transaction({
+            'chainId': self.chain_id,
             'from': self.account.address,
             'value': Web3.to_wei(amount_in_eth, 'ether'),
             'gas': 2000000,
@@ -112,6 +115,7 @@ class Preparer:
     def approve_token(self, token_contract, spender, amount_in_eth):
         amount_in_wei = Web3.to_wei(amount_in_eth, 'ether')
         tx = token_contract.functions.approve(spender, amount_in_wei).build_transaction({
+            'chainId': self.chain_id,
             'from': self.account.address,
             'gas': 2000000,
             'gasPrice': self.w3.eth.gas_price,
@@ -136,7 +140,7 @@ class Preparer:
         # 1. Fund all accounts:
         self.fund_accounts()
         # 2. Each account has to wrap enough WETH for swaps (each swap requires 1e-9 WETH)
-        # self.wrap_eth(0.00000005)
+        # self.wrap_eth(5e-8)
         # 3. Each account has to approve WETH spending to SMART_ROUTER
         # smart_router_address = self.blockchain.get_address(Contract.PANCAKE_SMART_ROUTER)
         # self.approve_token(self.weth, smart_router_address, 1)

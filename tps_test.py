@@ -92,7 +92,9 @@ class Trader:
         self.prefill_signed_txs()
 
     def swap_v2_prefill(self):
-        # Swap 1e-9 WETH for CAKE using swapExactTokensForTokens pool:
+        # Swap 1e-9 WETH for CAKE using swapExactTokensForTokens:
+        # calldata_v2_router02 = f"0x38ed1739000000000000000000000000000000000000000000000000000000003b9aca00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000{self.account.address.lower()[2:]}000000000000000000000000000000000000000000000000000000012a05f2000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000{self.weth_address.lower()[2:]}000000000000000000000000{self.cake_address.lower()[2:]}"
+        calldata_v3_router02 = f"0x472b43f3000000000000000000000000000000000000000000000000000000003b9aca0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000{self.account.address.lower()[2:]}0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000{self.weth_address.lower()[2:]}000000000000000000000000{self.cake_address.lower()[2:]}"
         tx = {
             'value': 0,
             'chainId': self.chain_id,
@@ -101,7 +103,7 @@ class Trader:
             'gasPrice': self.gas_price,
             'nonce': self.nonce,
             'to': self.smart_router_address,
-            'data': f'0x472b43f3000000000000000000000000000000000000000000000000000000003b9aca0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000{self.account.address.lower()[2:]}0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000{self.weth_address.lower()[2:]}000000000000000000000000{self.cake_address.lower()[2:]}'
+            'data': calldata_v3_router02,
         }
         signed_tx = Account.sign_transaction(tx, self.account.key)
         self.signed_txs_by_nonce[self.nonce] = signed_tx
@@ -125,38 +127,44 @@ class Trader:
     async def _sending_thread_async(self):
         ws_url = self.blockchain.ws_rpc_url()
         async with websockets.connect(ws_url) as ws:
-            while len(self.signed_txs_by_nonce):
-                txs_in_batch = min(20, len(self.signed_txs_by_nonce))
-                # Send requests in batch:
-                requests_left = txs_in_batch
-                for (nonce, signed_tx) in self.signed_txs_by_nonce.items():
-                    json_request = request_to_json("eth_sendRawTransaction", [signed_tx.rawTransaction.hex()], request_id=self.request_id)
-                    await ws.send(json.dumps(json_request))
-                    tx_hash = signed_tx.hash.hex()
-                    logger.info(f"[{self.account.address}] Tx request sent (swap): {tx_hash} | nonce={nonce} | id={self.request_id}")
-                    self.nonce_by_request_id[self.request_id] = nonce
-                    self.request_id += 1
-                    requests_left -= 1
-                    if requests_left == 0:
-                        break
-                    time.sleep(0.01)
-                # Recv responses in batch:
-                for _ in range(txs_in_batch):
-                    message = await ws.recv()
-                    logger.info(f"[{self.account.address}] Recv: {message}")
-                    json_response = json.loads(message)
-                    if "result" in json_response or ("error" in json_response and json_response["error"]["message"].startswith('known transaction')):
-                        nonce = self.nonce_by_request_id[json_response["id"]]
+            # 1. Send all transactions:
+            for (nonce, signed_tx) in self.signed_txs_by_nonce.items():
+                await self._send_transaction(ws, signed_tx, nonce)
+            # 2. Wait for RPC acknowledgements and resend if necessary:
+            while not TERMINATION_REQUESTED and len(self.signed_txs_by_nonce) > 0:
+                message = await ws.recv()
+                json_response = json.loads(message)
+                request_id = json_response["id"]
+                nonce = self.nonce_by_request_id[request_id]
+                error_message = (json_response["error"].get("message") if "error" in json_response else None) or ""
+                if "result" in json_response or error_message.startswith('known transaction'):
+                    if nonce in self.signed_txs_by_nonce:
                         tx_hash = self.signed_txs_by_nonce[nonce].hash.hex()
                         del self.signed_txs_by_nonce[nonce]
-                        logger.info(f"[{self.account.address}] Tx request accepted (swap): {tx_hash} | nonce={nonce}")
-                time.sleep(0.25)
+                        logger.info(f"[{self.account.address}] Tx request accepted (swap): {tx_hash} | nonce={nonce} | id={request_id}")
+                else:
+                    # Error: RPC didn't accept transaction, resedning...
+                    logger.info(f"[{self.account.address}] Recv: {message}")
+                    signed_tx = self.signed_txs_by_nonce[nonce]
+                    if "insufficient funds" in error_message or "transaction underpriced" in error_message:
+                        # No need to resend, tx will fail:
+                        logger.info(f"[{self.account.address}] Aborting tx: {signed_tx.hash.hex()} | nonce={nonce}")
+                        del self.signed_txs_by_nonce[nonce]
+                        continue
+                    await self._send_transaction(ws, signed_tx, nonce)
+
+    async def _send_transaction(self, ws, signed_tx, nonce):
+        json_request = request_to_json("eth_sendRawTransaction", [signed_tx.rawTransaction.hex()], request_id=self.request_id)
+        await ws.send(json.dumps(json_request))
+        tx_hash = signed_tx.hash.hex()
+        logger.info(f"[{self.account.address}] Tx request sent (swap): {tx_hash} | nonce={nonce} | id={self.request_id}")
+        self.nonce_by_request_id[self.request_id] = nonce
+        self.request_id += 1
 
 
 def run_in_parallel(objects):
     def start_and_wait(obj):
         obj.start()
-        return "Done"
     global EXECUTION_STARTED
     EXECUTION_STARTED = True
     start_time = time.time()
